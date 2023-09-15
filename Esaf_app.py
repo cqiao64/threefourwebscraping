@@ -9,19 +9,11 @@ import pandas as pd
 
 # Function to clean up the names
 def clean_name(name):
-    # Remove comma
     name = name.replace(',', '')
-   
-    # Split the name into words
     words = name.split()
-   
-    # If the name has more than two words, remove the third word
     if len(words) > 2:
         words = words[:2]
-   
-    # Join the words back together into one name
     name = ' '.join(words)
-   
     return name
 
 # Dictionary to store names and IDs
@@ -31,71 +23,62 @@ name_id_dict = {}
 no_id_found = []
 
 # Setup Edge driver
-driver = webdriver.Edge(service=Service(r"C:\Users\LPE4047\Desktop\msedgedriver.exe"))
+driver = webdriver.Edge(service=Service(r"PATH_TO_EDGE_DRIVER"))
 
 # Go to your webpage
-driver.get('https://esaf.hca.corpad.net/#/users')
+driver.get('WEBPAGE_URL')
 
 # Wait for the page to load completely
 driver.implicitly_wait(10)
 
 # Find the dropdown menu button and click it
-dropdown_button = driver.find_element(By.CSS_SELECTOR, 'button.icc-select-button')
+dropdown_button = driver.find_element(By.CSS_SELECTOR, 'DROPDOWN_BUTTON_SELECTOR')
 dropdown_button.click()
 
 # Wait for the dropdown menu to appear
-time.sleep(2)  # Adjust the sleep time as needed
+time.sleep(2)
 
-# Find the '3-4 ID' option and click it
+# Find the 'Facility' option and click it
 dropdown_option = driver.find_element(By.XPATH, '//span[text()="Facility"]')
 dropdown_option.click()
 
-# Find the search box, clear it, and enter the ID '00144'
-search_box = driver.find_element(By.CSS_SELECTOR, 'div.icc-searchbox.search-input input')
+# Find the search box, clear it, and enter the ID
+search_box = driver.find_element(By.CSS_SELECTOR, 'SEARCH_BOX_SELECTOR')
 search_box.clear()
-search_box.send_keys('00144')
+search_box.send_keys('SEARCH_ID')
 search_box.send_keys(Keys.RETURN)
 
 # Wait for the search results to load
-time.sleep(5)  # Adjust the sleep time as needed
+time.sleep(5)
 
-# Find the dropdown menu button again and click it
-dropdown_button = driver.find_element(By.CSS_SELECTOR, 'button.icc-select-button')
+# Repeat dropdown click
+dropdown_button = driver.find_element(By.CSS_SELECTOR, 'DROPDOWN_BUTTON_SELECTOR')
 dropdown_button.click()
 
 # Wait for the dropdown menu to appear
-time.sleep(2)  # Adjust the sleep time as needed
+time.sleep(2)
 
 # Find the 'Last name and First name' option and click it
 dropdown_option = driver.find_element(By.XPATH, '//span[text()="Last name and First name"]')
 dropdown_option.click()
 
 # Wait for the dropdown to close
-time.sleep(2)  # Adjust the sleep time as needed
+time.sleep(2)
 
 # Read names from the file and clean them up
-with open('names.txt', 'r') as file:
+with open('PATH_TO_NAMES_FILE', 'r') as file:
     names = [clean_name(line.strip()) for line in file]
 
 # Loop over the names
 for cleaned_name in names:
-
-    # Find the search box again, clear it, and enter the name
-    search_box = driver.find_element(By.CSS_SELECTOR, 'div.icc-searchbox.search-input input')
+    search_box = driver.find_element(By.CSS_SELECTOR, 'SEARCH_BOX_SELECTOR')
     search_box.clear()
     search_box.send_keys(cleaned_name)
     search_box.send_keys(Keys.RETURN)
-
-    # Wait for the search results to load
-    time.sleep(5)  # Adjust the sleep time as needed
-
-    # Parse the page source with BeautifulSoup
+    time.sleep(5)
     soup = BeautifulSoup(driver.page_source, "html.parser")
+    username_element = soup.find('span', class_='USERNAME_CLASS')
 
-    # Find the span element with the class 'username'
-    username_element = soup.find('span', class_='username')
-
-    # If the span element was found, store the username (text content) in the dictionary
     if username_element:
         name_id_dict[cleaned_name] = username_element.text
     else:
@@ -105,7 +88,7 @@ for cleaned_name in names:
 driver.quit()
 
 # Write names with no ID found to a text file
-with open('no_id_found.txt', 'w') as file:
+with open('PATH_TO_NO_ID_FOUND_FILE', 'w') as file:
     for name in no_id_found:
         file.write(name + '\n')
 
@@ -113,7 +96,7 @@ with open('no_id_found.txt', 'w') as file:
 df = pd.DataFrame(list(name_id_dict.items()), columns=['Cleaned Name', 'ID'])
 
 # Write the DataFrame to an Excel file using pandas
-df.to_excel('name_id_dict.xlsx', index=False)
+df.to_excel('OUTPUT_EXCEL_FILE', index=False)
 
 # Print the dictionary and the list of names with no ID found
 print(name_id_dict)
